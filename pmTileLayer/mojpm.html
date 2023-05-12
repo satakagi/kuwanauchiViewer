@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"></meta>
+<title>pmtiles read test</title>
+</head>
+
+<script src="https://unpkg.com/pmtiles@2.5.0/dist/index.js"></script>
+<script src="https://unpkg.com/pbf@3.0.5/dist/pbf.js"></script>
+<script src="../../../pbfTile/mbvt.js"></script>
+<!-- <script src="../geoJsonMetaSchemaGenerator.js"></script>-->
+
+<script>
+// ベクトルタイル　amx-a を表示する
+// https://qiita.com/mg_kudo/items/3179639c79c1734fd373
+// https://github.com/protomaps/PMTiles/tree/main/js
+// https://github.com/amx-project ベクトルタイル　amx-a 
+
+onload=function(){
+	setTimeout(zoomPanMapFunction,20);
+	svgImage.documentElement.setAttribute("property",schema.join(","));
+}
+
+addEventListener("zoomPanMap",zoomPanMapFunction);
+
+
+
+//let PMTILES_URL = "https://habs.rad.naro.go.jp/spatial_data/amx/a.pmtiles";
+let PMTILES_URL = "https://x.optgeo.org/ipfs/QmTZHWMAnRC5zNiNvdVuTDacThKkj4jKbwsZtKQkAC4R69";
+
+const pmt = new pmtiles.PMTiles(PMTILES_URL);
+
+
+var prevLevel = -1;
+var defaultLevelOffset = 4.5;
+
+async function zoomPanMapFunction(){
+	var level = Math.floor( Math.LOG2E * Math.log(svgImageProps.scale) + defaultLevelOffset);
+	if ( level < 3 ){
+		level = 3;
+	} else if ( level > 16 ){
+		level = 16;
+	}
+	
+	if ( level < 14){
+		svgImageProps.isClickable=false
+		level = level -1;
+	} else {
+		svgImageProps.isClickable=true
+	}
+	
+	//console.log("zoomPanMapFunction LEVEL:",level);
+	
+	currentLevel = level;
+	if ( currentLevel != prevLevel){
+		// console.log("buildDataSpecUI : ", currentLevel , prevLevel);
+	}
+	prevLevel = currentLevel;
+	var tileSet = getTileSet( svgMap.getGeoViewBox() , level );
+	//console.log("called gsivm zoomPanMapFunction: tileSet:",tileSet);
+	
+	var areaParentElm = svgImage.getElementById("areas");
+	
+	var currentTiles =  areaParentElm.getElementsByTagName("g");
+	
+	for ( var i = currentTiles.length - 1 ; i >= 0 ; i-- ){
+		var oneTile = currentTiles[i];
+		var qkey = oneTile.getAttribute("data-metadata");
+		if ( tileSet[qkey] ){
+			// console.log("exist, skip:",qkey);
+			tileSet[qkey].exist = true;
+		} else {
+			// console.log("Not exist, remove:",qkey);
+			oneTile.parentNode.removeChild(oneTile);
+		}
+	}
+	
+//	removeChildren(areaParentElm);
+	
+	for ( var tkey in tileSet ){
+		if ( ! tileSet[tkey].exist ){
+			// console.log("Load new tile:",tkey);
+			var tx = tileSet[tkey].x;
+			var ty = tileSet[tkey].y;
+			var tz = level;
+			//console.log(tx,ty,tz);
+			var tileContElement = svgImage.createElement("g");
+			tileContElement.setAttribute("data-metadata", tkey);
+			areaParentElm.appendChild(tileContElement);
+			//var geoData = await getPbf(tx,ty,tz);
+			//drawGeoData(geoData, {x:tx,y:ty,z:tz}, tileContElement);
+			drawPmtPbfTile(tx,ty,tz,tileContElement);
+		} else {
+			// console.log("Already exist:",tkey);
+		}
+	}
+}
+
+
+async function drawPmtPbfTile(tx,ty,tz,tileContElement){
+	var zxy ={x:tx,y:ty,z:tz};
+	var r=await pmt.getZxy(zxy.z,zxy.x,zxy.y)
+	var pbf = new Pbf(new Uint8Array(r.data));
+	var vt = new VectorTile(pbf);
+	
+	drawGeoData(vt, zxy,tileContElement);
+}
+
+var schema = ["地番","丁目名","大字名","市区町村名","予備コード","丁目コード","小字コード","大字コード","市区町村コード","地図名","地図番号","座標値種別","座標系","測地系判別","縮尺分母","精度区分"];
+
+function drawGeoData(geoData,xyz, tileContElement){
+	//var schema;
+	for ( var key in geoData.layers ){
+		var layer = geoData.layers[key];
+		var fc = layer.length
+		//console.log("layer:",layer," key:",key,"  length:",fc);
+		for ( var i = 0 ; i < fc ; i++ ){
+			var geojson = layer.feature(i).toGeoJSON(xyz.x,xyz.y,xyz.z); // geoGeojson(x,y,z)の数値はタイルのxyzのことです
+			//console.log(geojson);
+			/**
+			if ( !schema){
+				schema = window.generateMetaSchema(geojson);
+				window.setMetaProp( schema, window.svgImage,{});
+				svgImage.documentElement.setAttribute("property",schema);
+			}
+			**/
+			geojson.properties.stroke="brown";
+			geojson.properties["stroke-width"]=1;
+			//console.log("schema:",schema);
+			svgMapGIStool.drawGeoJson(geojson,layerID,"blue",1,"pink", "p0", "poi0", "", tileContElement,schema);
+		}
+	}
+	// console.log("load Completed:",xyz);
+	if ( typeof svgMapGIStool !="undefined"){
+		svgMap.refreshScreen();
+	}
+}
+
+
+
+
+// メルカトルタイルのURLを取得する関数群
+function getTileSet( geoViewBox , level ){
+	var TileSet = new Object();
+	if ( geoViewBox.y + geoViewBox.height > 85.05113 ){
+		geoViewBox.height = 85.05113 -  geoViewBox.y;
+	}
+	
+	if ( geoViewBox.y < -85.05113 ){
+		geoViewBox.y = -85.05113;
+	}
+	
+	// 指定エリアの、tileのXYとそのHashKeyを返却する
+	var tlxy = latLng2XY( geoViewBox.y + geoViewBox.height , geoViewBox.x , level );
+	var tileTLxy = XY2TileXY( tlxy );
+	var brxy = latLng2XY( geoViewBox.y , geoViewBox.x + geoViewBox.width, level );
+	var tileBRxy = XY2TileXY( brxy );
+	
+	for ( var i = tileTLxy.y ; i <= tileBRxy.y ; i++ ){
+		for ( var j = tileTLxy.x ; j <= tileBRxy.x  ; j++ ){
+			var qkey = getKey( j, i, level);
+			TileSet[qkey] = new Object();
+			TileSet[qkey].x = j;
+			TileSet[qkey].y = i;
+//				console.log( j , i , qkey );
+		}
+	}
+	return ( TileSet );
+}
+
+function latLng2XY( lat , lng , lvl ){
+	var size = lvl2Res(lvl);
+//		console.log("size:" + size);
+	var sinLat = Math.sin(lat * Math.PI / 180.0);
+	var pixelX = (( lng + 180.0 ) / 360.0 ) * size;
+	var pixelY = (0.5 - Math.log((1 + sinLat) / (1.0 - sinLat)) / (4 * Math.PI)) * size;
+	return {
+		x : pixelX ,
+		y : pixelY
+	}
+}
+
+function XY2TileXY( xy ){
+	var tileX = Math.floor(xy.x / tilePix);
+	var tileY = Math.floor(xy.y / tilePix);
+	return {
+		x : tileX ,
+		y : tileY
+	}
+}
+
+var tilePix = 256;
+function lvl2Res( lvl ){
+	var j = 1;
+	for(var i = 0 ; i < lvl ; i++){
+		j = j * 2;
+	}
+	return ( j * tilePix );
+}
+
+function XY2latLng( px , py , lvl ){
+	var size = lvl2Res(lvl);
+	var x = ( px / size ) - 0.5;
+	var y = 0.5 - ( py / size);
+	var lat = 90 - 360 * Math.atan(Math.exp(-y * 2 * Math.PI)) / Math.PI;
+	var lng = 360 * x;
+	return{
+		lat : lat ,
+		lng : lng
+	}
+}
+
+function getKey(tx , ty , lvl){
+	return ( tx + "_" + ty + "_" + lvl );
+}
+
+function removeChildren(element){
+	while (element.firstChild) element.removeChild(element.firstChild);
+}
+
+
+</script>
+<body>
+<h3>登記所備付地図データ</h3>
+
+<ul style="font-size:12px">
+<li><a href="https://github.com/amx-project" target="_blank">法務省地図XMLアダプトプロジェクト</a>のベクトルタイル(amx-a)を使用しています。
+<li>任意座標系のデータは掲載されていないと思われます。
+<li>なお、同プロジェクトのデータの出典は、<a href="https://www.moj.go.jp/MINJI/minji05_00494.html" target="_blank">こちらに案内されている登記所備付地図データ</a>です</a>
+</ul>
+</body>
+</html>

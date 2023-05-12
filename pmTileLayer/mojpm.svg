@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-42.8202042942663, -49.9999999999999, 513.842451531196, 600" xmlns:go="http://purl.org/svgmap/profile"  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" property="" data-controller="mojpm.html#requiredWidth=320&amp;exec=appearOnLayerLoad&amp;requiredHeight=200" >
+
+<globalCoordinateSystem srsName="http://purl.org/crs/84" transform="matrix(100,0,0,-100,0,0)" />
+<defs>
+ <g id="p0">
+  <circle cx="0" cy="0" r="6" fill="orange" stroke="none"/>
+ </g>
+ <g id="p1">
+  <circle cx="0" cy="0" r="5" fill="green" stroke="none"/>
+ </g>
+ <g id="p2">
+  <circle cx="0" cy="0" r="3" fill="red" stroke="none"/>
+ </g>
+ <g id="p3">
+  <circle cx="0" cy="0" r="5" fill="blue" stroke="none"/>
+ </g>
+ <g id="p4">
+  <circle cx="0" cy="0" r="5" fill="yellow" stroke="none"/>
+ </g>
+ <g id="p5">
+  <circle cx="0" cy="0" r="5" fill="purple" stroke="none"/>
+ </g>
+ <g id="indexPoi">
+  <circle cx="0" cy="0" r="15" fill="blue" stroke="none" opacity="0.7"/>
+ </g>
+</defs>
+
+<g id="distg" opacity="0.7"></g>
+
+<g id="indexg"></g>
+
+<g id="areas"></g>
+
+<!--
+<g id="poigT" transform="matrix(1,0,0,1,0,0)"> SVGMap.jsはtransform属性がサポートされていない・・・・ひどい
+	<rect x="13978.6309" y="-3567.1768" width="0.5" height="0.5" fill="#00ff00" opacity="0.8"/>
+</g>
+-->
+</svg>

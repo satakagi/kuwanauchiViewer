@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<!-- http://svg2.mbsrv.net/devinfo/devkddi/lvl0.1/airPort_r4b.html#svgView(viewBox(global,135,35,0.02,0.02)) -->
+<title>SVGMapLevel0.1 Demo No.0</title>
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0" />
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style>
+ body {
+ 	font-family: Meiryo;
+ }
+ #layerTable{
+ 	background:#ffE0E0;
+ 	border: 2px solid #bbb;
+ }
+ .layerItem{
+ 	background-color: white;
+ }
+ .noGroup{
+ 	background-color: #fff0f0;
+ }
+ #layerList{
+ 	background-color: #ffff80;opacity:0.8;
+ }
+ </style>
+
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/svgmap/svgMapLv0.1@latest/SVGMapLv0.1_r17.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/svgmap/svgMapLv0.1@latest/SVGMapLv0.1_LayerUI2_r4.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/svgmap/svgMapLv0.1@latest/experimental/Cesium3D/corsProxy.js"></script>
+<script type="text/javascript" src="https://unpkg.com/jsts@1.6.1/dist/jsts.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/svgmap/svgMapLv0.1@latest/SVGMapLv0.1_GIS_r3.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/svgmap/svgMapLv0.1@latest/SVGMapLv0.1_Authoring_r7.js"></script>
+
+<script>
+var proxyPath = "https://service.svgmap.org/corsaw/"; // CORS anywhere for svgmap.org / service.svgmap.org
+corsProxy.setService(proxyPath, null, true,false);
+svgMap.setProxyURLFactory(null,null,null, corsProxy.getURL,true); // ビットイメージ非線形図法変換の時のみプロキシを使う
+</script>
+
+
+
+<body bgcolor="#ffffff" style="overflow:hidden;" >
+ <div id="mapcanvas" data-src="kuwanauchiContainer.svg"></div>
+ <div id="gui">
+  <img id="zoomupButton" style="left: 5px; top: 5px; position: absolute;" src="imgs/zoomup.png" onclick="svgMap.zoomup()" width="20" height="20" />
+  <img id="zoomdownButton" style="left: 5px; top: 25px; position: absolute;" src="imgs/zoomdown.png" onclick="svgMap.zoomdown()" width="20" height="20" />
+  <img id="gpsButton" style="left: 5px; top: 45px; position: absolute;" src="imgs/gps.png" onclick="svgMap.gps()" width="20" height="20" />
+  
+  
+  <img id="centerSight" style="opacity:0.5" src="imgs/Xcursor.png" width="15" height="15"/>
+  <table style="right: 3px; top: 2px; position: absolute;font-size:12px;color:brown">
+  <tr><td>Lat,Lng:</td><td id="centerPos"></td></tr>
+  </table>
+  
+  <span id="noticeTextJ"  style="font-size:10px; left: 3px; bottom: 12px; position: absolute;background-color:rgba(0,200,200,0.5)">注記：このページは、技術のプレビューのために提供されています。本ページ作成者は、表示された各レイヤの情報を利用した結果生じたいかなる損害についても、一切の責任を負いません。</span>
+
+  <div id="layerList" style="left :30px; top: 10px; width:300px;height:90%; position: absolute; ">
+  </div>
+
+  <div id="layerSpecificUI" style="right :10px; top: 40px; width:400px;height:400px; position: absolute; background-color: white;opacity:0.8;display:none;">
+  </div>
+  
+  
+ </div>
+</body>
+</html>
